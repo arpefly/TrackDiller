@@ -1,5 +1,6 @@
 import functools
 import time
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
@@ -15,7 +16,7 @@ def timer(func):
         start = time.perf_counter()
         result = func(*args, **kwargs)
         runtime = time.perf_counter() - start
-        print(f"{func.__name__} took {runtime:.4f} secs")
+        print(f"{datetime.now().strftime('%d.%m.%Y %H:%M:%S')} {func.__name__} took {runtime:.4f} secs")
         return result
 
     return _wrapper
@@ -26,6 +27,7 @@ def get_data() -> list[Export]:
     vehicles = []
     ua = UserAgent()
 
+    # get available trucks on otomoto.pl
     cookies = {
         'laquesis': 'cars-33522@b#cars-34184@a#cars-36794@b#cars-37743@b#cars-38418@b#cars-38824@b#cars-38834@a#cars-39185@b#cars-40275@a#cars-40386@b#cars-40725@b#cars-41189@a#cars-41196@a#cars-41420@b#cars-41538@b#cars-41542@a#cars-42079@a#euads-3587@a#mcta-682@a',
         'lqstatus': '1678208824',
@@ -68,10 +70,13 @@ def get_data() -> list[Export]:
 
     edges = response['data']['advertSearch']['edges']
     for edge in edges:
+
+        # continute if the vehicle has already been parsed
         vehicle_id = edge['node']['id']
         if db.vehicle_exists(site_name='otomoto', vehicle_id=vehicle_id):
             continue
 
+        # continue if vehicle doesn't fit the description
         title = edge['node']['title']
         info = edge['node']['shortDescription']
         if not ('fh 460' in title.lower() or 'fh460' in title.lower() or 'fh500' in title.lower() or 'fh 500' in title.lower() or
@@ -84,6 +89,7 @@ def get_data() -> list[Export]:
         location = edge['node']['location']['region']['name'] + ' (' + edge['node']['location']['city']['name'] + ')'
         site_name = 'otomoto'
 
+        # request for detailes photos
         cookies = {
             'laquesis': 'cars-33522@b#cars-34184@a#cars-36794@b#cars-37743@b#cars-38418@b#cars-38824@b#cars-38834@a#cars-39185@b#cars-40275@a#cars-40386@b#cars-40725@b#cars-41189@a#cars-41196@a#cars-41420@b#cars-41538@b#cars-41542@a#cars-42079@a#euads-3587@a#mcta-682@a',
             'lqstatus': '1678208824',
@@ -126,10 +132,12 @@ def get_data() -> list[Export]:
         vehicles.append(Export(vehicle_id=vehicle_id,
                                link=link,
                                title=title,
-                               picture=picture,
+                               photos=picture,
                                price=price,
                                info=info,
                                location=location,
-                               site_name=site_name))
+                               site_name=site_name,
+                               year=9999,
+                               is_automat=True))
 
     return vehicles

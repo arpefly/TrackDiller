@@ -13,7 +13,7 @@ async def scheduler():
     Планировщик рассылки уведомлений
     """
 
-    aioschedule.every(1).minute.do(broadcast)
+    aioschedule.every(1).hour.at(':00').do(broadcast)
 
     while True:
         await aioschedule.run_pending()
@@ -24,6 +24,8 @@ async def on_startup(_):
     handlers.setup(dp)
     asyncio.create_task(scheduler())
     print('bot is online')
+
+    await broadcast()
 
 
 async def on_shutdown(_):
