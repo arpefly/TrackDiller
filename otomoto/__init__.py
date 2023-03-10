@@ -1,1 +1,1 @@
-from .parse_tractors import get_data as otomoto_trackors
+from .parse_volvlo_tractors import get_data as otomoto_volvo_trackors

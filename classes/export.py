@@ -1,5 +1,5 @@
 class Export:
-    def __init__(self, vehicle_id: int, link: str, title: str, picture: list, price: int, info: str, location: str):
+    def __init__(self, vehicle_id: int, link: str, title: str, picture: str, price: int, info: str, location: str, site_name: str):
         self.vehicle_id = vehicle_id
         self.link = link
         self.title = title
@@ -7,3 +7,4 @@ class Export:
         self.price = price
         self.info = info
         self.location = location
+        self.site_name = site_name

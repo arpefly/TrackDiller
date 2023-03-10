@@ -8,16 +8,16 @@ class Database:
         self.connection = sql.connect(db_file)
         self.cursor = self.connection.cursor()
 
-    def vehicle_exists(self, site_name: str, vehicle_id: str) -> bool:
+    def vehicle_exists(self, site_name: str, vehicle_id: int) -> bool:
         with self.connection:
             result = self.cursor.execute(f'SELECT * FROM {site_name} WHERE vehicle_id = ?', (vehicle_id,)).fetchall()
             return bool(len(result))
 
     def add_vehicle(self, site_name: str, export: Export):
         with self.connection:
-            self.cursor.execute(f'INSERT INTO otomoto VALUES (?, ?, ?, ?, ?, ?, ?)', (export.vehicle_id, export.link, export.title, export.picture, export.price, export.info, export.location))
+            self.cursor.execute(f'INSERT INTO {site_name} VALUES (?, ?, ?, ?, ?, ?, ?, ?)', (export.vehicle_id, export.link, export.title, export.picture, export.price, export.info, export.location, export.site_name))
 
-    def get_vehicle(self, site_name: str, vehicle_id: int):
+    def get_vehicle(self, site_name: str, vehicle_id: int) -> Export:
         with self.connection:
-            result = self.cursor.execute(f'SELECT * FROM {site_name} WHERE vehicle_id = ?', (vehicle_id,)).fetchmany(1)
-            return result
+            result = self.cursor.execute(f'SELECT * FROM {site_name} WHERE vehicle_id = ?', (vehicle_id,)).fetchone()
+            return Export(*result)
