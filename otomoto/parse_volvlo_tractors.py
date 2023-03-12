@@ -8,6 +8,7 @@ from fake_useragent import UserAgent
 
 from classes.export import Export
 from create_bot import db
+from utils import water_mark
 
 
 def timer(func):
@@ -23,7 +24,7 @@ def timer(func):
 
 
 @timer
-def get_data(convert_from_PLN: int, convert_from_EUR: int) -> list[Export]:
+def get_data(convert_from_pln: int, convert_from_eur: int) -> list[Export]:
     vehicles = []
     ua = UserAgent()
 
@@ -125,19 +126,24 @@ def get_data(convert_from_PLN: int, convert_from_EUR: int) -> list[Export]:
         soup = BeautifulSoup(response.text, 'lxml')
         photos = ';'.join(list(map(lambda pic: pic['data-lazy'].split(';')[0], soup.find_all('img', {'class': 'bigImage'})))[:5])
 
-        if photos.strip() == '':
+        if len(photos.split(';')) == 0:
+            continue
+
+        photos = ';'.join(water_mark(site_name='otomoto', vehicle_id=vehicle_id, photos=photos))
+
+        year = get_year(soup)
+        if try_parse_int(year) < 2010:
             continue
 
         link = edge['node']['url']
         if edge['node']['price']['amount']['currencyCode'] == 'EUR':
-            price = int(int(edge['node']['price']['amount']['units']) * convert_from_EUR) + 15000
+            price = int(int(edge['node']['price']['amount']['units']) * convert_from_eur) + 15000
         elif edge['node']['price']['amount']['currencyCode'] == 'PLN':
-            price = int(int(edge['node']['price']['amount']['units']) * convert_from_PLN) + 15000
+            price = int(int(edge['node']['price']['amount']['units']) * convert_from_pln) + 15000
         else:
             price = 0
         location = edge['node']['location']['region']['name'] + ' (' + edge['node']['location']['city']['name'] + ')'
         site_name = 'otomoto'
-        year = get_year(soup)
         automat = get_automat(soup)
 
         vehicles.append(Export(vehicle_id=vehicle_id,
@@ -168,3 +174,10 @@ def get_automat(soup: BeautifulSoup) -> str:
             return item.find('div').text.strip()
 
     return 'нет информации'
+
+
+def try_parse_int(string):
+    try:
+        return int(string)
+    except:
+        return 0

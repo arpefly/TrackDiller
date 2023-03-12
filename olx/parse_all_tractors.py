@@ -8,6 +8,7 @@ from fake_useragent import UserAgent
 
 from classes.export import Export
 from create_bot import db
+from utils import water_mark
 
 
 def timer(func):
@@ -108,14 +109,22 @@ def get_data(convert_from_pln: int, convert_from_eur: int) -> list[Export]:
         if db.vehicle_exists(site_name='olx', vehicle_id=vehicle_id):
             continue
 
+        year = get_year(item['params'])
+        if try_parse_int(year) < 2010:
+            continue
+
+        photos = ';'.join([photo['link'].split(';')[0] for photo in item['photos']])
+        if len(photos.split(';')) == 0:
+            continue
+
+        photos = ';'.join(water_mark(site_name='olx', vehicle_id=vehicle_id, photos=photos))
+
         link = item['url']
         title = item['title']
-        photos = ';'.join([photo['link'].split(';')[0] for photo in item['photos']])
-        info = BeautifulSoup(item['description'], 'lxml').text
+        info = BeautifulSoup(item['description'], 'lxml').text or item['description']
         price = get_price(item['params'], convert_from_pln, convert_from_eur)
         location = item['location']['region']['name'] + ' (' + item['location']['city']['name'] + ')'
         site_name = 'olx'
-        year = get_year(item['params'])
         automat = get_automat(item['params'])
 
         vehicles.append(Export(vehicle_id=vehicle_id,
@@ -156,10 +165,17 @@ def get_automat(params: dict) -> str:
         if 'transmission' in item['key']:
             transmission_type = item['value']['key']
             if transmission_type == 'automatic':
-                return 'Автоматическая'
+                return 'Автомат'
             elif transmission_type == 'manual':
-                return 'Механическая'
+                return 'Механика'
             else:
                 return 'нет информации'
 
     return 'нет информации'
+
+
+def try_parse_int(string):
+    try:
+        return int(string)
+    except:
+        return 0

@@ -3,16 +3,16 @@ import asyncio
 from create_bot import bot, db
 from utils.config import Admin, Customer
 
-from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 
 
 async def help_with_callback(callback: CallbackQuery):
     vehicle = db.get_vehicle(site_name=callback.data.split(' ')[1], vehicle_id=callback.data.split(' ')[2])
 
     try:
-        for user in [Admin]:  # , Customer]:
+        for user in [Admin, Customer]:
             await bot.send_photo(chat_id=user,
-                                 photo=vehicle.photos.split(';')[0],
+                                 photo=InputFile(vehicle.photos.split(';')[0]),
                                  caption=f'{callback.from_user.full_name} заинтересовался предложением:\n'
                                          f'<a href="{vehicle.link}"><b>{vehicle.title}</b></a>\n\n'
                                          f'<b>Цена (с наценкой 15.000$):</b> {vehicle.price} $\n'
