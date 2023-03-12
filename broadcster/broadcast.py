@@ -1,19 +1,31 @@
 import asyncio
 import random
 
-import aiogram.utils.exceptions
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, ParseMode
+from aiogram.utils.exceptions import RetryAfter
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, Message
 
 from create_bot import bot, db
-from config import VehicleSeller, TestVehicleSeller
+from utils import TestVehicleSeller
+from utils import convert
 from otomoto import otomoto_volvo_trackors
+from olx import olx_all_tandems
+from olx import olx_all_tractors
 from classes import Export
 
 
 async def broadcast():
+    currencies = convert()
     vehicles = []
 
-    vehicles += otomoto_volvo_trackors()
+    print('-' * 30)
+    vehicles += otomoto_volvo_trackors(*currencies)
+    print(f'len(vehicles): {len(vehicles)}')
+    vehicles += olx_all_tandems(*currencies)
+    print(f'len(vehicles): {len(vehicles)}')
+    vehicles += olx_all_tractors(*currencies)
+    print(f'len(vehicles): {len(vehicles)}')
+    print(f'total len: {len(vehicles)}')
+    print('-' * 30, end='\n\n')
 
     for vehicle in vehicles:
         vehicle: Export
@@ -25,33 +37,50 @@ async def broadcast():
             [InlineKeyboardButton(text='Получить консультацию', callback_data=f'buy {vehicle.site_name} {vehicle.vehicle_id}')]
         ])
 
+        message = Message()
         try:
             if len(vehicle.photos.split(';')) >= 2:
-                await bot.send_media_group(chat_id=VehicleSeller,
-                                           media=[InputMediaPhoto(media=vehicle.photos.split(';')[0],
-                                                                  caption=f'<b>{vehicle.title}</b>\n\n'
-                                                                          f'<b>Цена:</b> {vehicle.price} $\n'
-                                                                          f'<b>Локация:</b> {vehicle.location}\n'
-                                                                          f'<b>Описание:</b> {vehicle.info}',
-                                                                  parse_mode=ParseMode.HTML)] +
-                                                 [InputMediaPhoto(media=pic) for pic in vehicle.photos.split(';')][1:])
+                try:
+                    await bot.send_media_group(chat_id=TestVehicleSeller,
+                                               media=[InputMediaPhoto(media=vehicle.photos.split(';')[0],
+                                                                      caption=f'<b>{vehicle.title}</b>\n\n'
+                                                                              f'<b>Цена:</b> {vehicle.price if vehicle.price != 0 else "уточняйте при консультации"} $\n'
+                                                                              f'<b>Год выпуска:</b> {vehicle.year}\n'
+                                                                              f'<b>Коробка передач:</b> {vehicle.transmission}\n')] +
+                                                     [InputMediaPhoto(media=pic) for pic in vehicle.photos.split(';')][1:],
+                                               disable_notification=True)
 
-                await bot.send_message(chat_id=VehicleSeller,
-                                       text=f'<b>Получить консультацию по {vehicle.title}</b>',
-                                       parse_mode=ParseMode.HTML,
-                                       reply_markup=contact)
+                    await bot.send_message(chat_id=TestVehicleSeller,
+                                           text=f'<b>Получить консультацию по {vehicle.title}</b>',
+                                           reply_markup=contact,
+                                           disable_notification=True)
+                except RetryAfter as ex:
+                    await asyncio.sleep(ex.timeout + 20)
+                    await bot.send_media_group(chat_id=TestVehicleSeller,
+                                               media=[InputMediaPhoto(media=vehicle.photos.split(';')[0],
+                                                                      caption=f'<b>{vehicle.title}</b>\n\n'
+                                                                              f'<b>Цена:</b> {vehicle.price if vehicle.price != 0 else "уточняйте при консультации"} $\n'
+                                                                              f'<b>Год выпуска:</b> {vehicle.year}\n'
+                                                                              f'<b>Коробка передач:</b> {vehicle.transmission}\n')] +
+                                                     [InputMediaPhoto(media=pic) for pic in vehicle.photos.split(';')][1:],
+                                               disable_notification=True)
+
+                    await bot.send_message(chat_id=TestVehicleSeller,
+                                           text=f'<b>Получить консультацию по {vehicle.title}</b>',
+                                           reply_markup=contact,
+                                           disable_notification=True)
             else:
-                await bot.send_photo(chat_id=VehicleSeller,
+                await bot.send_photo(chat_id=TestVehicleSeller,
                                      photo=vehicle.photos,
                                      caption=f'<b>{vehicle.title}</b>\n\n'
                                              f'<b>Цена:</b> {vehicle.price} $\n'
-                                             f'<b>Локация:</b> {vehicle.location}\n'
-                                             f'<b>Описание:</b> {vehicle.info}',
-                                     parse_mode=ParseMode.HTML,
-                                     reply_markup=contact)
-        except aiogram.utils.exceptions.RetryAfter as ex:
+                                             f'<b>Год выпуска:</b> {vehicle.year}\n'
+                                             f'<b>Коробка передач:</b> {vehicle.transmission}\n',
+                                     reply_markup=contact,
+                                     disable_notification=True)
+        except RetryAfter as ex:
             print(ex)
-            await asyncio.sleep(ex.timeout + random.randint(0, 5))
+            await asyncio.sleep(ex.timeout + 20)
 
-        db.add_vehicle(site_name='otomoto', export=vehicle)
-        await asyncio.sleep(10 + random.randint(0, 5))
+        db.add_vehicle(site_name=vehicle.site_name, export=vehicle)
+        await asyncio.sleep(20 + random.randint(2, 7))

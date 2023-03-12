@@ -10,14 +10,14 @@ from broadcster import broadcast
 
 async def scheduler():
     """
-    Планировщик рассылки уведомлений
+    Планировщик рассылки
     """
 
     aioschedule.every(1).hour.at(':00').do(broadcast)
 
     while True:
         await aioschedule.run_pending()
-        await asyncio.sleep(1)
+        await asyncio.sleep(10)
 
 
 async def on_startup(_):

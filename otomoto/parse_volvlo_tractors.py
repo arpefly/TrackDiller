@@ -23,7 +23,7 @@ def timer(func):
 
 
 @timer
-def get_data() -> list[Export]:
+def get_data(convert_from_PLN: int, convert_from_EUR: int) -> list[Export]:
     vehicles = []
     ua = UserAgent()
 
@@ -63,7 +63,7 @@ def get_data() -> list[Export]:
     }
     params = {
         'operationName': 'listingScreen',
-        'variables': '{"categoryId":"57","click2BuyExperimentId":"CARS-34184","click2BuyExperimentVariant":"a","experiments":[{"key":"MCTA-682","variant":"a"},{"key":"MCTA-685","variant":"a"}],"filters":[{"name":"filter_enum_make","value":"volvo"},{"name":"filter_enum_gearbox","value":"automatic"},{"name":"filter_enum_damaged","value":"0"},{"name":"q","value":"fh"},{"name":"subcategory_id","value":"81"},{"name":"order","value":"created_at_first:desc"},{"name":"category_id","value":"57"},{"name":"filter_float_year:from","value":"2010"},{"name":"filter_float_price:to","value":"150000"}],"includeClick2Buy":false,"includeFiltersCounters":false,"includePriceEvaluation":false,"includePromotedAds":false,"includeRatings":false,"includeSortOptions":false,"maxAge":60,"page":1,"parameters":["make","offer_type","year","mileage","engine_capacity","fuel_type"],"searchTerms":null,"sortBy":"created_at_first:desc"}',
+        'variables': '{"categoryId":"57","click2BuyExperimentId":"CARS-34184","click2BuyExperimentVariant":"a","experiments":[{"key":"MCTA-682","variant":"a"},{"key":"MCTA-685","variant":"a"}],"filters":[{"name":"filter_enum_make","value":"volvo"},{"name":"filter_enum_damaged","value":"0"},{"name":"q","value":"fh"},{"name":"subcategory_id","value":"81"},{"name":"order","value":"created_at_first:desc"},{"name":"category_id","value":"57"},{"name":"filter_float_year:from","value":"2010"},{"name":"filter_float_price:to","value":"150000"}],"includeClick2Buy":false,"includeFiltersCounters":false,"includePriceEvaluation":false,"includePromotedAds":false,"includeRatings":false,"includeSortOptions":false,"maxAge":60,"page":1,"parameters":["make","offer_type","year","mileage","engine_capacity","fuel_type"],"searchTerms":null,"sortBy":"created_at_first:desc"}',
         'extensions': '{"persistedQuery":{"sha256Hash":"73eb8ed8efd659872656208529da9f1b5eeaae1bf6cfc3ceb6aca04fccc0b198","version":1}}',
     }
     response = requests.get('https://www.otomoto.pl/graphql', params=params, cookies=cookies, headers=headers).json()
@@ -83,11 +83,6 @@ def get_data() -> list[Export]:
                 'fh 460' in info.lower() or 'fh460' in info.lower() or 'fh500' in info.lower() or 'fh 500' in info.lower() or
                 '460' in title.lower() or '500' in title.lower() or '460' in info.lower() or '500' in info.lower()):
             continue
-
-        link = edge['node']['url']
-        price = int(int(edge['node']['price']['amount']['units']) / 4.3987) + 15000
-        location = edge['node']['location']['region']['name'] + ' (' + edge['node']['location']['city']['name'] + ')'
-        site_name = 'otomoto'
 
         # request for detailes photos
         cookies = {
@@ -127,17 +122,49 @@ def get_data() -> list[Export]:
             'user-agent': ua.random
         }
         response = requests.get(f'https://www.otomoto.pl/{vehicle_id}', cookies=cookies, headers=headers)
-        picture = ';'.join(list(map(lambda pic: pic['data-lazy'].split(';')[0], BeautifulSoup(response.text, 'lxml').find_all('img', {'class': 'bigImage'})))[:5])
+        soup = BeautifulSoup(response.text, 'lxml')
+        photos = ';'.join(list(map(lambda pic: pic['data-lazy'].split(';')[0], soup.find_all('img', {'class': 'bigImage'})))[:5])
+
+        if photos.strip() == '':
+            continue
+
+        link = edge['node']['url']
+        if edge['node']['price']['amount']['currencyCode'] == 'EUR':
+            price = int(int(edge['node']['price']['amount']['units']) * convert_from_EUR) + 15000
+        elif edge['node']['price']['amount']['currencyCode'] == 'PLN':
+            price = int(int(edge['node']['price']['amount']['units']) * convert_from_PLN) + 15000
+        else:
+            price = 0
+        location = edge['node']['location']['region']['name'] + ' (' + edge['node']['location']['city']['name'] + ')'
+        site_name = 'otomoto'
+        year = get_year(soup)
+        automat = get_automat(soup)
 
         vehicles.append(Export(vehicle_id=vehicle_id,
                                link=link,
                                title=title,
-                               photos=picture,
+                               photos=photos,
                                price=price,
                                info=info,
                                location=location,
                                site_name=site_name,
-                               year=9999,
-                               is_automat=True))
+                               year=year,
+                               transmission=automat))
 
     return vehicles
+
+
+def get_year(soup: BeautifulSoup) -> str:
+    for item in soup.find_all('li', {'class': 'offer-params__item'}):
+        if 'Rok produkcji' in item.text:
+            return item.find('div').text.strip()
+
+    return 'нет информации'
+
+
+def get_automat(soup: BeautifulSoup) -> str:
+    for item in soup.find_all('li', {'class': 'offer-params__item'}):
+        if 'Skrzynia biegów' in item.text:
+            return item.find('div').text.strip()
+
+    return 'нет информации'

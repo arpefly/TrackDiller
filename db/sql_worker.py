@@ -13,9 +13,9 @@ class Database:
             result = self.cursor.execute(f'SELECT * FROM {site_name} WHERE vehicle_id = ?', (vehicle_id,)).fetchall()
             return bool(len(result))
 
-    def add_vehicle(self, site_name: str, export: Export):
+    def add_vehicle(self, export: Export):
         with self.connection:
-            self.cursor.execute(f'INSERT INTO {site_name} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (export.vehicle_id, export.link, export.title, export.photos, export.price, export.info, export.location, export.site_name, export.year, export.is_automat))
+            self.cursor.execute(f'INSERT INTO {export.site_name} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (export.vehicle_id, export.link, export.title, export.photos, export.price, export.info, export.location, export.site_name, export.year, export.transmission))
 
     def get_vehicle(self, site_name: str, vehicle_id: int) -> Export:
         with self.connection:
