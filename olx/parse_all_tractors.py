@@ -113,7 +113,7 @@ def get_data(convert_from_pln: int, convert_from_eur: int) -> list[Export]:
         if try_parse_int(year) < 2010:
             continue
 
-        photos = ';'.join([photo['link'].split(';')[0] for photo in item['photos']])
+        photos = ';'.join([photo['link'].split(';')[0] for photo in item['photos'] if photo['link'].strip()])
         if len(photos.split(';')) == 0:
             continue
 

@@ -18,14 +18,16 @@ async def broadcast():
     vehicles = []
 
     print('-' * 30)
-    # vehicles += otomoto_volvo_trackors(*currencies)
-    # print(f'len(vehicles): {len(vehicles)}')
+
+    vehicles += otomoto_volvo_trackors(*currencies)
+    print(f'len(vehicles): {len(vehicles)}')
     vehicles += olx_all_tandems(*currencies)
     print(f'len(vehicles): {len(vehicles)}')
     vehicles += olx_all_tractors(*currencies)
     print(f'len(vehicles): {len(vehicles)}')
 
     print(f'total len: {len(vehicles)}')
+
     print('-' * 30, end='\n\n')
 
     for vehicle in vehicles:
@@ -46,7 +48,8 @@ async def broadcast():
                                                                       caption=f'<b>{vehicle.title}</b>\n\n'
                                                                               f'<b>Цена:</b> {vehicle.price if vehicle.price != 0 else "уточняйте при консультации"} $\n'
                                                                               f'<b>Год:</b> {vehicle.year}\n'
-                                                                              f'<b>Коробка:</b> {vehicle.transmission}\n')] +
+                                                                              f'<b>Коробка:</b> {vehicle.transmission}\n\n'
+                                                                              '<b>Консультация: @smmbahtiiar</b>')] +
                                                      [InputMediaPhoto(media=InputFile(pic)) for pic in vehicle.photos.split(';')][1:],
                                                disable_notification=True)
 
@@ -71,7 +74,9 @@ async def broadcast():
                                                 '<b>Консультация: @smmbahtiiar</b>',
                                            reply_markup=contact,
                                            disable_notification=True)
-            else:
+            elif len(vehicle.photos.split(';')) == 1:
+                if vehicle.photos.split(';')[0] == '':
+                    continue
                 await bot.send_photo(chat_id=VehicleSeller,
                                      photo=InputFile(vehicle.photos.split(';')[0]),
                                      caption=f'<b>{vehicle.title}</b>\n\n'
@@ -81,6 +86,8 @@ async def broadcast():
                                              '<b>Консультация: @smmbahtiiar</b>',
                                      reply_markup=contact,
                                      disable_notification=True)
+            else:
+                continue
         except RetryAfter as ex:
             print(ex)
             await asyncio.sleep(ex.timeout + 20)

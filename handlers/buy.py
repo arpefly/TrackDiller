@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 from create_bot import bot, db
 from utils.config import Admin, Customer
@@ -26,5 +27,5 @@ async def help_with_callback(callback: CallbackQuery):
 
         await callback.answer(text='Спасибо. Заявка принята. В ближайшее время с Вами свяжется наш менеджер.', show_alert=True)
     except Exception as ex:
-        print(ex)
+        print(datetime.now().strftime('%d.%m.%Y %H:%M:%S') + str(ex))
         await asyncio.sleep(5)

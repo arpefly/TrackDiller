@@ -124,7 +124,7 @@ def get_data(convert_from_pln: int, convert_from_eur: int) -> list[Export]:
         }
         response = requests.get(f'https://www.otomoto.pl/{vehicle_id}', cookies=cookies, headers=headers)
         soup = BeautifulSoup(response.text, 'lxml')
-        photos = ';'.join(list(map(lambda pic: pic['data-lazy'].split(';')[0], soup.find_all('img', {'class': 'bigImage'})))[:5])
+        photos = ';'.join(list(filter(str.strip, list(map(lambda pic: pic['data-lazy'].split(';')[0], soup.find_all('img', {'class': 'bigImage'})))[:5])))
 
         if len(photos.split(';')) == 0:
             continue
@@ -171,7 +171,10 @@ def get_year(soup: BeautifulSoup) -> str:
 def get_automat(soup: BeautifulSoup) -> str:
     for item in soup.find_all('li', {'class': 'offer-params__item'}):
         if 'Skrzynia biegów' in item.text:
-            return item.find('div').text.strip()
+            if item.find('div').text.strip() == 'Manualna':
+                return 'Механика'
+            elif item.find('div').text.strip() == 'Automatyczna':
+                return 'Автомат'
 
     return 'нет информации'
 

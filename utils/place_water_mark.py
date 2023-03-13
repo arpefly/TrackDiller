@@ -7,6 +7,9 @@ import requests
 
 
 def place_mark(site_name: str, vehicle_id: int, url: str) -> str:
+    if url == '':
+        return ''
+
     image = Image.open(BytesIO(requests.get(url).content))
     box = (0, image.size[1] - image.size[1] * 0.07, image.size[0], image.size[1])
     draw = ImageDraw.Draw(image)
@@ -36,8 +39,9 @@ def place_mark(site_name: str, vehicle_id: int, url: str) -> str:
 
 def water_mark(site_name: str, vehicle_id: int, photos: str) -> list:
     partial_func = partial(place_mark, site_name, vehicle_id)
+    photos = [photo for photo in photos.split(';') if photo.strip()]
 
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-        water_photos = pool.map(partial_func, photos.split(';'))
+        water_photos = pool.map(partial_func, photos)
 
     return water_photos

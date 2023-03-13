@@ -112,11 +112,12 @@ def get_data(convert_from_pln: int, convert_from_eur: int) -> list[Export]:
         vehicle_id = item['id']
         if db.vehicle_exists(site_name='olx', vehicle_id=vehicle_id):
             continue
+
         year = get_year(item['params'])
         if try_parse_int(year) < 2010:
             continue
 
-        photos = ';'.join([photo['link'].split(';')[0] for photo in item['photos']])
+        photos = ';'.join([photo['link'].split(';')[0] for photo in item['photos'] if photo['link'].strip()])
         if len(photos.split(';')) == 0:
             continue
 
