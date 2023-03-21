@@ -129,7 +129,7 @@ def get_data(convert_from_pln: int, convert_from_eur: int) -> list[Export]:
         if len(photos.split(';')) == 0:
             continue
 
-        photos = ';'.join(water_mark(site_name='otomoto', vehicle_id=vehicle_id, photos=photos))
+        photos = ';'.join(list(filter(str.strip, water_mark(site_name='otomoto', vehicle_id=vehicle_id, photos=photos))))
 
         year = get_year(soup)
         if try_parse_int(year) < 2010:

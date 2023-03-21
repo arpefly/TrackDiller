@@ -4,13 +4,37 @@ from functools import partial
 
 from PIL import Image, ImageDraw, ImageFont
 import requests
+from fake_useragent import UserAgent
 
 
 def place_mark(site_name: str, vehicle_id: int, url: str) -> str:
     if url == '':
         return ''
 
-    image = Image.open(BytesIO(requests.get(url).content))
+    ua = UserAgent()
+    headers = {
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'accept-language': 'en-US,en;q=0.9,ru;q=0.8',
+        'cache-control': 'max-age=0',
+        'dnt': '1',
+        'if-modified-since': 'Tue, 21 Mar 2023 13:16:25 GMT',
+        'if-none-match': '"dp0ar8ktx7ha-PL"',
+        'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="102"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'none',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
+        'user-agent': ua.random
+    }
+    try:
+        image = Image.open(BytesIO(requests.get(url, headers=headers).content))
+    except Exception as ex:
+        print(ex)
+        return ''
+
     box = (0, image.size[1] - image.size[1] * 0.07, image.size[0], image.size[1])
     draw = ImageDraw.Draw(image)
     draw.rectangle(box, fill="#FFFFFF")

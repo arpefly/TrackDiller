@@ -2,7 +2,7 @@ import asyncio
 import random
 
 from aiogram.utils.exceptions import RetryAfter
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputFile
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputFile, Message
 
 from create_bot import bot, db
 from utils import TestVehicleSeller, VehicleSeller
@@ -50,30 +50,28 @@ async def broadcast():
                                                                               f'<b>Год:</b> {vehicle.year}\n'
                                                                               f'<b>Коробка:</b> {vehicle.transmission}\n\n'
                                                                               '<b>Консультация: @smmbahtiiar</b>')] +
-                                                     [InputMediaPhoto(media=InputFile(pic)) for pic in vehicle.photos.split(';')][1:],
-                                               disable_notification=True)
+                                                     [InputMediaPhoto(media=InputFile(pic)) for pic in vehicle.photos.split(';')][1:10])
 
                     await bot.send_message(chat_id=VehicleSeller,
                                            text=f'<b>Получить консультацию по {vehicle.title}</b>\n\n'
                                                 '<b>Консультация: @smmbahtiiar</b>',
-                                           reply_markup=contact,
-                                           disable_notification=True)
+                                           reply_markup=contact)
                 except RetryAfter as ex:
+                    print(f'1 {ex}')
                     await asyncio.sleep(ex.timeout + 20)
                     await bot.send_media_group(chat_id=VehicleSeller,
                                                media=[InputMediaPhoto(media=InputFile(vehicle.photos.split(';')[0]),
                                                                       caption=f'<b>{vehicle.title}</b>\n\n'
                                                                               f'<b>Цена:</b> {vehicle.price if vehicle.price != 0 else "уточняйте при консультации"} $\n'
                                                                               f'<b>Год:</b> {vehicle.year}\n'
-                                                                              f'<b>Коробка:</b> {vehicle.transmission}\n')] +
-                                                     [InputMediaPhoto(media=InputFile(pic)) for pic in vehicle.photos.split(';')][1:],
-                                               disable_notification=True)
+                                                                              f'<b>Коробка:</b> {vehicle.transmission}\n\n'
+                                                                              '<b>Консультация: @smmbahtiiar</b>')] +
+                                                     [InputMediaPhoto(media=InputFile(pic)) for pic in vehicle.photos.split(';')][1:10])
 
                     await bot.send_message(chat_id=VehicleSeller,
                                            text=f'<b>Получить консультацию по {vehicle.title}</b>\n\n'
                                                 '<b>Консультация: @smmbahtiiar</b>',
-                                           reply_markup=contact,
-                                           disable_notification=True)
+                                           reply_markup=contact)
             elif len(vehicle.photos.split(';')) == 1:
                 if vehicle.photos.split(';')[0] == '':
                     continue
@@ -84,12 +82,11 @@ async def broadcast():
                                              f'<b>Год:</b> {vehicle.year}\n'
                                              f'<b>Коробка:</b> {vehicle.transmission}\n\n'
                                              '<b>Консультация: @smmbahtiiar</b>',
-                                     reply_markup=contact,
-                                     disable_notification=True)
+                                     reply_markup=contact)
             else:
                 continue
         except RetryAfter as ex:
-            print(ex)
+            print(f'2 {ex}')
             await asyncio.sleep(ex.timeout + 20)
 
         db.add_vehicle(export=vehicle)

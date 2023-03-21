@@ -9,6 +9,7 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMar
 
 async def help_with_callback(callback: CallbackQuery):
     vehicle = db.get_vehicle(site_name=callback.data.split(' ')[1], vehicle_id=callback.data.split(' ')[2])
+    print(callback.from_user.url)
 
     try:
         for user in [Admin, Customer]:

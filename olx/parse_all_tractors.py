@@ -113,11 +113,11 @@ def get_data(convert_from_pln: int, convert_from_eur: int) -> list[Export]:
         if try_parse_int(year) < 2010:
             continue
 
-        photos = ';'.join([photo['link'].split(';')[0] for photo in item['photos'] if photo['link'].strip()])
+        photos = ';'.join(list(filter(str.strip, [photo['link'].split(';')[0] for photo in item['photos']])))
         if len(photos.split(';')) == 0:
             continue
 
-        photos = ';'.join(water_mark(site_name='olx', vehicle_id=vehicle_id, photos=photos))
+        photos = ';'.join(list(filter(str.strip, water_mark(site_name='olx', vehicle_id=vehicle_id, photos=photos))))
 
         link = item['url']
         title = item['title']
