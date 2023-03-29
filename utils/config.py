@@ -3,4 +3,4 @@ TestVehicleSeller = -1001887191619
 Admin = 856367900
 Customer = 1331812370
 
-exchangerate_API = '4876951d4239bc9b17452d07'
+exchangerate_API = 'c0981626ffc1a14075eff894'

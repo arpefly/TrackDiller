@@ -30,7 +30,7 @@ def place_mark(site_name: str, vehicle_id: int, url: str) -> str:
         'user-agent': ua.random
     }
     try:
-        image = Image.open(BytesIO(requests.get(url, headers=headers).content))
+        image = Image.open(BytesIO(requests.get(url, headers=headers).content)).convert('RGB')
     except Exception as ex:
         print(ex)
         return ''

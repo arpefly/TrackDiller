@@ -58,7 +58,8 @@ async def broadcast():
                                            reply_markup=contact)
                 except RetryAfter as ex:
                     print(f'1 {ex}')
-                    await asyncio.sleep(ex.timeout + 20)
+                    await asyncio.sleep(ex.timeout + 70)
+
                     await bot.send_media_group(chat_id=VehicleSeller,
                                                media=[InputMediaPhoto(media=InputFile(vehicle.photos.split(';')[0]),
                                                                       caption=f'<b>{vehicle.title}</b>\n\n'
