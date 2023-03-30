@@ -42,15 +42,15 @@ def place_mark(site_name: str, vehicle_id: int, url: str) -> str:
     text = "Напишите на WhatsApp +996 705 817 477"
     font_size = 80
     size = None
-    font = ImageFont.truetype(r'C:\Users\wasd\AppData\Local\Microsoft\Windows\Fonts\Croogla4F.ttf', font_size)
+    font = ImageFont.truetype('fonts/Croogla4F.ttf', font_size)
     while (size is None or size[0] > box[2] - box[0] or size[1] > box[3] - box[1]) and font_size > 0:
         size = font.getsize_multiline(text)
         font_size -= 1
-        font = ImageFont.truetype(r'C:\Users\wasd\AppData\Local\Microsoft\Windows\Fonts\Croogla4F.ttf', font_size)
+        font = ImageFont.truetype('fonts/Croogla4F.ttf', font_size)
 
     if font_size > 30:
         font_size = 28
-        font = ImageFont.truetype(r'C:\Users\wasd\AppData\Local\Microsoft\Windows\Fonts\Croogla4F.ttf', font_size)
+        font = ImageFont.truetype('fonts/Croogla4F.ttf', font_size)
 
     draw.multiline_text((box[0], box[1]), text, "#000000", font)
 
