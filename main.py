@@ -14,7 +14,7 @@ async def scheduler():
     Планировщик рассылки
     """
 
-    aioschedule.every(1).hour.at(':00').do(broadcast)
+    aioschedule.every(1).hour.at(':00').do(lambda: asyncio.create_task(broadcast()))
 
     while True:
         await aioschedule.run_pending()
